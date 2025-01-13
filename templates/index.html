@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block head_scripts %}
+    <script>
+        column_names = ["Ship ID", "Ship Name", "Tonnage", "Cargo Type", 
+        "Scheduled Arrival Time", "Has Arrived?", "Arrival Time", "Port of Call"];
+
+
+        form_submit = function(e){
+            e.preventDefault();
+            search();
+        }
+
+
+        function search(){
+            var xhttp = new XMLHttpRequest();
+            const ship_id_queried = document.getElementById("ship_id_input").value
+            if(ship_id_queried.search("/[']/")){
+                document.getElementById("fail_message").innerText = "Invalid ship ID"
+            }
+            xhttp.open("GET", "/api/shipinfo?ship_id="+encodeURIComponent(ship_id_queried), true);
+            xhttp.addEventListener('load', (e) => {
+                document.getElementById("fail_message").innerText = ""
+                console.log(xhttp.status);
+                console.log(xhttp.responseText);
+                if (xhttp.status == 200) {
+                    let results = JSON.parse(xhttp.responseText)["result"]
+                    if(results.length == 0){
+                        document.getElementById("fail_message").innerText = "Ship not found";
+                    } else{
+                        resultsTable = document.getElementById("results");
+                        resultsTable.innerHTML = ""
+                        const header = document.createElement("tr");
+                        for(i in column_names){
+                            const column = document.createElement("th");
+                            column.innerText = column_names[i];
+                            header.appendChild(column);
+                        }
+                        resultsTable.appendChild(header);
+                        for(i in results){
+                            item = results[i]
+                            console.log(item)
+                            const r = document.createElement("tr")
+                            for(i in item){
+                                const d = document.createElement("td");
+                                d.innerText = item[i];
+                                r.appendChild(d);
+                            }
+                            resultsTable.appendChild(r)
+                        }
+                    }
+                }
+                else{
+                    document.getElementById("fail_message").innerText = JSON.parse(xhttp.responseText)["error"]
+                }
+            });
+            xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xhttp.send();
+
+        }
+    </script>
+{% endblock %}
+{% block content %}
+    <h1>Check ship information by ID</h1>
+    <form onsubmit="form_submit(event)">
+        {{ form.search_ship_id(placeholder="Ship ID", id="ship_id_input") }} 
+        <input type="button" value="Submit" id="search_btn" onclick="search()"/>
+    </form>
+    <table id="results">
+        <tr>
+            <th>Ship ID</th>
+            <th>Ship Name</th>
+            <th>Tonnage</th>
+            <th>Cargo Type</th>
+            <th>Scheduled Arrival Time</th>
+            <th>Has Arrived?</th>
+            <th>Arrival Time</th>
+            <th>Port of Call</th>
+        </tr>
+    </table>
+    <p id="fail_message" style="color: red"></p>
+{% endblock %}
