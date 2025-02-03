@@ -1,4 +1,6 @@
 .venv
 __pycache__
+detected_sqlinjections.txt
+app.py
 immunidock/sqlexec/accinit.sql
 immunidock/sqlexec/evaluator-client.cnf

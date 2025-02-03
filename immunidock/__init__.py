@@ -29,8 +29,21 @@ except docker.errors.NotFound:
 else:
     existing_container.remove(force=True)
     del existing_container
-docker_client.images.pull("mariadb:lts-ubi")
-sql_eval_container = docker_client.containers.run("mariadb:lts-ubi", detach=True, network_disabled=True, volumes={
+
+print("Sleeping before detection of existing mariadb:uts-ubi image...")
+sleep(2)
+try:
+    print(docker_client.images.get("mariadb:lts-ubi"))
+except docker.errors.ImageNotFound:
+    print("No mariadb:lts-ubi image; attempting to pull from repository")
+    try:
+        docker_client.images.pull("mariadb:lts-ubi")
+    except docker.errors.TimeoutError:
+        print("No network; cannot get a mariadb:lts-ubi image")
+        exit()
+
+sql_eval_container = docker_client.containers.run("mariadb:lts-ubi", 
+detach=True, network_disabled=True, auto_remove=True, volumes={
     module_location+"/sqlexec": {
         "bind": "/docker-entrypoint-initdb.d",
         "mode": "ro"}
@@ -44,7 +57,6 @@ sql_eval_container = docker_client.containers.run("mariadb:lts-ubi", detach=True
 print("Sleeping for immunidock initialisation")
 while True:
     socket_existence = sql_eval_container.exec_run("ls /run/mariadb")
-    print(socket_existence)
     if b"mariadb.sock\n" in socket_existence.output:
         sleep(4)
         break

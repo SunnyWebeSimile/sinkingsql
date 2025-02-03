@@ -3,7 +3,7 @@ import mariadb
 from getpass import getpass
 from instance.sqlquery import get_ship_info
 from ship_form import ShipIDForm
-from os import urandom
+from os import urandom, remove
 from json import dumps
 from datetime import datetime
 from immunidock import eval_query
@@ -40,13 +40,16 @@ def ship_info_api():
     if ship_id_queried is not None:
         if str(ship_id_queried).isalnum() or eval_query.eval_query(ship_id_queried):
             ret_data = get_ship_info(ship_id_queried)
-            print(ret_data)
             if ret_data.get("error") is None:
                 return dumps(ret_data, default=stringify), 200
             else:
                 return dumps(ret_data), 404
         else:
             print("Attempted attack on shipping database detected; report to authorities")
+            log_line = (datetime.now().isoformat() + "\t"
+            "immunidock detected potential malicious SQL query:" + ship_id_queried)
+            with open("detected_sqlinjections.txt", "a") as sqli_log:
+                sqli_log.writelines((log_line,))
             return "{\"error\": \"Invalid ship ID\"}", 500
     else:
         return "{\"error\": \"Missing ship ID\"}", 400
@@ -67,4 +70,10 @@ except mariadb.Error as e:
 
 
 app.config["SECRET_KEY"] = urandom(32)
-app.run(host="0.0.0.0")
+try:
+    remove("detected_sqlinjections.txt")
+except FileNotFoundError:
+    pass
+
+if __name__ == "__main__":
+    app.run(host="127.0.0.1")
