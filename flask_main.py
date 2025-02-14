@@ -49,7 +49,7 @@ def ship_info_api():
             log_line = (datetime.now().isoformat() + "\t"
             "immunidock detected potential malicious SQL query:" + ship_id_queried)
             with open("detected_sqlinjections.txt", "a") as sqli_log:
-                sqli_log.writelines((log_line,))
+                sqli_log.write(log_line+"\n")
             return "{\"error\": \"Invalid ship ID\"}", 500
     else:
         return "{\"error\": \"Missing ship ID\"}", 400

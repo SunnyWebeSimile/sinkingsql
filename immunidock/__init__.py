@@ -30,7 +30,7 @@ else:
     existing_container.remove(force=True)
     del existing_container
 
-print("Sleeping before detection of existing mariadb:uts-ubi image...")
+print("Sleeping before detection of existing mariadb:lts-ubi image...")
 sleep(2)
 try:
     print(docker_client.images.get("mariadb:lts-ubi"))
@@ -38,8 +38,8 @@ except docker.errors.ImageNotFound:
     print("No mariadb:lts-ubi image; attempting to pull from repository")
     try:
         docker_client.images.pull("mariadb:lts-ubi")
-    except docker.errors.TimeoutError:
-        print("No network; cannot get a mariadb:lts-ubi image")
+    except docker.errors.APIError:
+        print("Network failure; cannot get a mariadb:lts-ubi image")
         exit()
 
 sql_eval_container = docker_client.containers.run("mariadb:lts-ubi", 

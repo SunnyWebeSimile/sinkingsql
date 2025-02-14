@@ -1,4 +1,5 @@
 import mariadb
+from mariadb.constants import ERR
 from getpass import getpass
 
 while True:
@@ -12,7 +13,7 @@ while True:
             database = "sinkingsql"
         )
     except mariadb.Error as e:
-        if e.errno == mariadb.constants.ERR.ER_ACCESS_DENIED_ERROR:
+        if e.errno == ERR.ER_ACCESS_DENIED_ERROR:
             print("Authentication failure")
         else:
             print(f"MariaDB Error: {e}")
